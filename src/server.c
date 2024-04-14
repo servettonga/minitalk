@@ -6,49 +6,45 @@
 /*   By: sehosaf <sehosaf@student.42warsaw.pl>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/14 10:49:42 by sehosaf           #+#    #+#             */
-/*   Updated: 2024/04/14 16:29:37 by sehosaf          ###   ########.fr       */
+/*   Updated: 2024/04/15 22:35:09 by sehosaf          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minitalk.h"
 
-static void handle_signal(int sig, siginfo_t *info, void *ucontext);
-
 /*
 	The server receives the signals from the client and decodes them.
+	The signals are received by the server in the handle_signal function.
+	Listening to the signals SIGUSR1 and SIGUSR2. Which represent the binary
+	values 0 and 1 respectively.
 
-	-	Fist check if the argument count is 1, if not print the usage message.
+	When the server receives a signal, it decodes the signal and prints the
+	character to the standard output. The server will continue to listen for
+	signals until it does not receive any signals for 2 minutes.
 
-	-	Then print the server's PID.
-
-	-	Next, set the signal handler to handle_signal.
-
-	-	After that, set the signal mask to empty. Meaning no signals are blocked.
+	-	The signal mask is set to be empty. Meaning no signals are blocked.
 		sa_mask specifies a mask of signals which should be blocked
-		(i.e., added to the signal mask of the thread in which the signal handler
-		is invoked) during execution of the signal handler.
+		(i.e., added to the signal mask of the thread in which the signal
+		handler	is invoked) during execution of the signal handler.
 		sigemptyset — initialize and empty a signal set
 
-	-	Then set the flags to SA_SIGINFO. Meaning the signal handler takes
-		three arguments as defined in the sigaction structure:
-		"SA_SIGINFO: The signal handler takes three arguments, not one.  In this case,
-		 sa_sigaction should be set instead of sa_handler."
-
-	-	Then, the server will pause until it receives a signal.
-
-	-	Finally, return 0.
+	-	Set the flags to SA_SIGINFO means the signal handler takes three
+		arguments as defined in the sigaction structure:
+		"SA_SIGINFO: The signal handler takes three arguments, not one.
+		In this case, sa_sigaction should be set instead of sa_handler."
 */
 
-int main(int argc, char *argv[]) {
+int	main(int argc, char *argv[])
+{
 	struct sigaction	sa;
 
 	(void)argv;
 	if (argc != 1)
 	{
 		ft_printf("%sUsage: %s%s\n", RED, argv[0], END);
-		return (1);
+		exit (1);
 	}
-	ft_printf("%sThe server is ready and running [PID: %d]%s\n\v", CYAN, getpid(), END);
+	ft_printf("%sThe server is ready [PID: %d]%s\n\v", CYAN, getpid(), END);
 	sa.sa_sigaction = handle_signal;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_SIGINFO;
@@ -56,9 +52,32 @@ int main(int argc, char *argv[]) {
 	{
 		sigaction(SIGUSR1, &sa, NULL);
 		sigaction(SIGUSR2, &sa, NULL);
-		pause();
+		if (sleep(300) == 0)
+		{
+			ft_printf("%sTimeout, exiting...%s\n", RED, END);
+			exit (0);
+		}
 	}
 	return (0);
+}
+
+/*
+	The send_feedback function sends a SIGUSR1 signal to the client to confirm
+	that the message has been received. If the signal is sent successfully,
+	it will print sender's process ID. Otherwise, it will print an error message.
+*/
+
+static void	send_feedback(siginfo_t *info)
+{
+	int	return_value;
+	int	pid;
+
+	pid = info->si_pid;
+	return_value = kill(pid, SIGUSR1);
+	if (return_value == -1)
+		ft_printf("%sError sending feedback to %d%s\n", RED, pid, END);
+	else
+		ft_printf("\n%sSender:%s %d\n\v", YELLOW, END, pid);
 }
 
 /*
@@ -101,7 +120,7 @@ int main(int argc, char *argv[]) {
 	Finally, it will reset 'bit_th' and 'i' to 0 to receive the next byte of data
 */
 
-static void handle_signal(int sig, siginfo_t *info, void *ucontext)
+void	handle_signal(int sig, siginfo_t *info, void *ucontext)
 {
 	static int	bit_th;
 	static int	i;
@@ -113,13 +132,15 @@ static void handle_signal(int sig, siginfo_t *info, void *ucontext)
 	if (bit_th == 8)
 	{
 		if (i != '\0')
-			ft_printf("%c", i);
+			ft_putchar_fd(i, STDOUT_FILENO);
 		else
-		{
-			ft_printf("\n%sSender:%s %d\n\v", YELLOW, END, (int)(info->si_pid));
-			kill(info->si_pid, SIGUSR1);
-		}
+			send_feedback(info);
 		bit_th = 0;
 		i = 0;
 	}
+}
+
+void	ft_putchar_fd(char c, int fd)
+{
+	write(fd, &c, 1);
 }

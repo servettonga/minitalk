@@ -1,39 +1,40 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   client.c                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: sehosaf <sehosaf@student.42warsaw.pl>      +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/04/14 17:11:12 by sehosaf           #+#    #+#             */
+/*   Updated: 2024/04/15 22:34:59 by sehosaf          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "minitalk.h"
 
-static void send_message(pid_t pid, char msg);
-static void confirm_signal(int sig);
-static int ft_atoi(const char *str);
-
 /*
-	The client sends a message to the server by sending signals.
+	The client sends a message to the server by sending signals. The message is
+	sent character by character converted to binary using SIGUSR1 and SIGUSR2.
 
-	-	First check if the argument count is 3, if not print the usage message.
-
-	-	Then convert the PID from a string to an integer.
-
-	-	Next, set the message to the second argument.
-
-	-	Then, while the message is not empty, send the message to the server.
-		The message is sent by sending signals to the server.
-		The action for SIGUSR1 is set to confirm_signal.
-		Then each character in the message is sent to the server.
-
-	-	Finally, send a null character to the server to indicate the end of the message.
-
-	-	Return 0.
+	Then client receives a confirmation signal from the server.
 */
 
-int main(int argc, char *argv[])
+int	main(int argc, char *argv[])
 {
 	pid_t	pid;
 	char	*message;
 
 	if (argc != 3)
 	{
-		ft_printf("%sUsage: %s [PID] [MESSAGE]%s\n", RED, argv[0], END);
-		return (1);
+		ft_printf("%sUsage: %s <PID> <MESSAGE>%s\n", RED, argv[0], END);
+		exit (1);
 	}
 	pid = ft_atoi(argv[1]);
+	if (pid <= 0)
+	{
+		ft_printf("%sInvalid PID%s\n", RED, END);
+		exit (1);
+	}
 	message = argv[2];
 	while (*message)
 	{
@@ -47,22 +48,22 @@ int main(int argc, char *argv[])
 
 /*
 	The confirm_signal function confirms that the message was sent successfully.
-
-	-	If the signal is SIGUSR1, print a message indicating that the message was sent successfully.
+	If the signal is SIGUSR1, print a message indicating that the message
+	was sent successfully.
 */
 
-static void	confirm_signal(int sig)
+void	confirm_signal(int sig)
 {
 	if (sig == SIGUSR1)
-		ft_printf("%sMessage sent successfully [PID: %d]%s\n", GREEN, getpid(), END);
+		ft_printf("%sReceived [Sender PID: %d]%s\n", GREEN, getpid(), END);
 }
 
 /*
-	The send_message function sends a message to the server by sending signals.
+	The message should be sent bit by bit. The client sends a message to the
+	server by sending signals. The message is sent character by character converted
+	to binary using SIGUSR1 and SIGUSR2.
 
-	-	First, set the bit to 0.
-
-	-	Then, while the bit is less than 8, send a signal to the server.
+	-	While the bit is less than 8, send a signal to the server.
 
 		Takes the number 1 (0x01) and shifts it left by the bit.
 		For example: 0x01 << 0 = 0x01, 0x01 << 1 = 0x02, 0x01 << 2 = 0x04, etc.
@@ -70,21 +71,16 @@ static void	confirm_signal(int sig)
 
 		If the bit is set in the message, send SIGUSR1.
 		Otherwise, send SIGUSR2.
-
-	-	Then sleep for 100 microseconds.
-
-	-	Finally, increment the bit.
-
 */
 
-static void send_message(pid_t pid, char msg)
+void	send_message(pid_t pid, char msg)
 {
-	int bit;
+	int	bit;
 
 	bit = 0;
 	while (bit < 8)
 	{
-		if ((msg & (0x01 << bit)) != 0)
+		if (msg & (0x01 << bit))
 			kill(pid, SIGUSR1);
 		else
 			kill(pid, SIGUSR2);
@@ -94,7 +90,8 @@ static void send_message(pid_t pid, char msg)
 }
 
 /*
-	Convert a string to an integer.
+	The ft_atoi is needed to convert the string representation of the process ID
+	to an integer.
 */
 int	ft_atoi(const char *str)
 {

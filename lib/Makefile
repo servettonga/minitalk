@@ -18,14 +18,14 @@ OBJS	=	$(SRC:=.o)
 all: $(NAME)
 
 $(NAME): $(OBJS)
-	$(AR) $(NAME) $(OBJS)
-	ranlib $(NAME)
+	@$(AR) $(NAME) $(OBJS)
+	@ranlib $(NAME)
 
 clean:
-	$(RM) $(OBJS)
+	@$(RM) $(OBJS)
 
 fclean: clean
-	$(RM) $(NAME)
+	@$(RM) $(NAME)
 
 re: fclean all
 

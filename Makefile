@@ -1,30 +1,36 @@
-SERVER	=   server
+NAME	=   server
 CLIENT	=   client
 CC		=	cc
-CFLAGS	=	-Wall -Wextra -Werror -I lib -L./lib -lftprintf
+CFLAGS	=	-Wall -Wextra -Werror -I lib
 LIB		=	lib/libftprintf.a
-SRCS 	=	src/server.c \
-			src/client.c
-OBJS	=	server \
-			client
+LIBFLG	=	-L lib -lftprintf
+SRC_DIR	=	src
+SERVER_SRC = $(SRC_DIR)/server.c
+CLIENT_SRC = $(SRC_DIR)/client.c
+SERVER_OBJS = $(SERVER_SRC:.c=.o)
+CLIENT_OBJS = $(CLIENT_SRC:.c=.o)
 
-all: $(LIB) $(OBJS)
+all: $(NAME) $(CLIENT)
 
 $(LIB):
-	make -C lib
+	@make -C lib
 
-server: $(SRCS) $(LIB)
-	$(CC) $(CFLAGS) -o $(SERVER) src/server.c
+$(NAME): $(SERVER_OBJS) $(LIB)
+	$(CC) $(CFLAGS) $(SERVER_OBJS) -o $(NAME) $(LIBFLG)
 
-client: $(SRCS) $(LIB)
-	$(CC) $(CFLAGS) -o $(CLIENT) src/client.c
+$(CLIENT): $(CLIENT_OBJS) $(LIB)
+	$(CC) $(CFLAGS) $(CLIENT_OBJS) -o $(CLIENT) $(LIBFLG)
+
+%.o: %.c
+	@$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(LIB)
-	make clean -C lib
+	@make fclean -C lib
+	@rm -f $(SERVER_OBJS) $(CLIENT_OBJS)
 
 fclean: clean
-	rm -f $(OBJS)
-	make fclean -C lib
+	@rm -f $(NAME) $(CLIENT)
 
 re: fclean all
+
+.PHONY: all clean fclean re

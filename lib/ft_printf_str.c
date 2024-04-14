@@ -6,7 +6,7 @@
 /*   By: sehosaf <sehosaf@student.42warsaw.pl>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/06 11:38:04 by sehosaf           #+#    #+#             */
-/*   Updated: 2024/04/13 23:23:33 by sehosaf          ###   ########.fr       */
+/*   Updated: 2024/04/14 17:08:43 by sehosaf          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,6 +24,7 @@ static size_t	__ptr_len(uintptr_t num)
 	}
 	return (digits);
 }
+
 static size_t	ft_strlen(const char *s)
 {
 	size_t	i;
