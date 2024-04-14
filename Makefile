@@ -1,8 +1,8 @@
 SERVER	=   server
 CLIENT	=   client
 CC		=	cc
-CFLAGS	=	-Wall -Wextra -Werror -I lib -L . -lftprintf
-LIB		=	libftprintf.a
+CFLAGS	=	-Wall -Wextra -Werror -I lib -L./lib -lftprintf
+LIB		=	lib/libftprintf.a
 SRCS 	=	src/server.c \
 			src/client.c
 OBJS	=	server \
@@ -12,12 +12,11 @@ all: $(LIB) $(OBJS)
 
 $(LIB):
 	make -C lib
-	cp lib/$(LIB) .
 
-server: src/server.c $(LIB)
+server: $(SRCS) $(LIB)
 	$(CC) $(CFLAGS) -o $(SERVER) src/server.c
 
-client: src/client.c src/utils.c $(LIB)
+client: $(SRCS) $(LIB)
 	$(CC) $(CFLAGS) -o $(CLIENT) src/client.c
 
 clean:
@@ -26,5 +25,6 @@ clean:
 
 fclean: clean
 	rm -f $(OBJS)
+	make fclean -C lib
 
 re: fclean all
