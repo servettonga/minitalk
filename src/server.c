@@ -6,7 +6,7 @@
 /*   By: sehosaf <sehosaf@student.42warsaw.pl>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/14 10:49:42 by sehosaf           #+#    #+#             */
-/*   Updated: 2024/04/15 22:35:09 by sehosaf          ###   ########.fr       */
+/*   Updated: 2025/01/09 19:50:26 by sehosaf          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,26 +37,26 @@
 int	main(int argc, char *argv[])
 {
 	struct sigaction	sa;
+	sigset_t			block_mask;
 
 	(void)argv;
 	if (argc != 1)
 	{
 		ft_printf("%sUsage: %s%s\n", RED, argv[0], END);
-		exit (1);
+		exit(1);
 	}
-	ft_printf("%sThe server is ready [PID: %d]%s\n\v", CYAN, getpid(), END);
+	sigemptyset(&block_mask);
+	sigaddset(&block_mask, SIGUSR1);
+	sigaddset(&block_mask, SIGUSR2);
 	sa.sa_sigaction = handle_signal;
-	sigemptyset(&sa.sa_mask);
+	sa.sa_mask = block_mask;
 	sa.sa_flags = SA_SIGINFO;
+	ft_printf("%sThe server is ready [PID: %d]%s\n\v", CYAN, getpid(), END);
 	while (argc == 1)
 	{
 		sigaction(SIGUSR1, &sa, NULL);
 		sigaction(SIGUSR2, &sa, NULL);
-		if (sleep(300) == 0)
-		{
-			ft_printf("%sTimeout, exiting...%s\n", RED, END);
-			exit (0);
-		}
+		pause();
 	}
 	return (0);
 }
@@ -120,24 +120,53 @@ static void	send_feedback(siginfo_t *info)
 	Finally, it will reset 'bit_th' and 'i' to 0 to receive the next byte of data
 */
 
+static void	process_byte(t_buffer *buf, siginfo_t *info)
+{
+	if (*buf->i != '\0')
+	{
+		buf->data[buf->pos] = *buf->i;
+		buf->pos++;
+		if (buf->pos >= 1024)
+		{
+			write(STDOUT_FILENO, buf->data, buf->pos);
+			buf->pos = 0;
+		}
+	}
+	else
+	{
+		if (buf->pos > 0)
+			write(STDOUT_FILENO, buf->data, buf->pos);
+		buf->pos = 0;
+		send_feedback(info);
+	}
+	*buf->bit_th = 0;
+	*buf->i = 0;
+}
+
 void	handle_signal(int sig, siginfo_t *info, void *ucontext)
 {
-	static int	bit_th;
-	static int	i;
+	static t_buffer	buf;
+	static int		bit_th;
+	static int		i;
 
 	(void)ucontext;
+	if (buf.pid != info->si_pid)
+	{
+		if (buf.pos > 0)
+			write(STDOUT_FILENO, buf.data, buf.pos);
+		buf.pos = 0;
+		bit_th = 0;
+		i = 0;
+		buf.pid = info->si_pid;
+	}
+	buf.i = &i;
+	buf.bit_th = &bit_th;
 	if (sig == SIGUSR1)
 		i |= (0x01 << bit_th);
 	bit_th++;
+	kill(info->si_pid, SIGUSR1);
 	if (bit_th == 8)
-	{
-		if (i != '\0')
-			ft_putchar_fd(i, STDOUT_FILENO);
-		else
-			send_feedback(info);
-		bit_th = 0;
-		i = 0;
-	}
+		process_byte(&buf, info);
 }
 
 void	ft_putchar_fd(char c, int fd)

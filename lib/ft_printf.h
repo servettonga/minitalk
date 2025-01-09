@@ -6,7 +6,7 @@
 /*   By: sehosaf <sehosaf@student.42warsaw.pl>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/03/06 11:37:12 by sehosaf           #+#    #+#             */
-/*   Updated: 2024/04/13 23:21:58 by sehosaf          ###   ########.fr       */
+/*   Updated: 2025/01/09 12:21:47 by sehosaf          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 # include <stdbool.h>
 # include <stdlib.h>
 # include <unistd.h>
+# include <stdint.h>
 
 int		ft_printf(const char *format, ...);
 

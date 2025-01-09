@@ -6,7 +6,7 @@
 /*   By: sehosaf <sehosaf@student.42warsaw.pl>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/14 17:09:53 by sehosaf           #+#    #+#             */
-/*   Updated: 2024/04/15 22:36:04 by sehosaf          ###   ########.fr       */
+/*   Updated: 2025/01/09 19:51:19 by sehosaf          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,12 +17,12 @@
 # include "../lib/ft_printf.h"
 
 //			Colors
-# define	RED "\033[0;31m"
-# define	GREEN "\033[1;32m"
-# define	YELLOW "\033[0;33m"
-# define	BLUE "\033[1;34m"
-# define	END "\033[0m"
-# define	CYAN "\033[1;36m"
+# define RED "\033[0;31m"
+# define GREEN "\033[1;32m"
+# define YELLOW "\033[0;33m"
+# define BLUE "\033[1;34m"
+# define END "\033[0m"
+# define CYAN "\033[1;36m"
 
 // 		Server
 void	handle_signal(int sig, siginfo_t *info, void *ucontext);
@@ -34,5 +34,14 @@ void	confirm_signal(int sig);
 // 		Utils
 int		ft_atoi(const char *str);
 void	ft_putchar_fd(char c, int fd);
+
+typedef struct s_buffer
+{
+	char	data[1024];
+	size_t	pos;
+	int		*i;
+	int		*bit_th;
+	pid_t	pid;
+}	t_buffer;
 
 #endif
